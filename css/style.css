@@ -1,0 +1,15 @@
+#btn-1 {
+  color: green;
+  /* More weight due to specificity algo */
+}
+.btn {
+  color: blue;
+}
+
+button{
+    display: block;
+}
+
+p{
+    display: inline;
+}
