@@ -54,7 +54,7 @@ const registerUser = async (req, res) => {
     });
 
     const mailOption = {
-      from: process.env.MAILTRAP_SENDEREMAIL, // sender address
+      from: process.env.MAILTRAP_SENDER_EMAIL, // sender address
       to: user.email, // list of receivers
       subject: "Verify your email", // Subject line
       text: `Please click on the following link:
@@ -127,9 +127,13 @@ const login = async (req, res) => {
       });
     }
 
-    const token = jwt.sign({ id: user._id, role: user.role }, "shhhhh", {
-      expiresIn: "24h",
-    });
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: process.env.JWT_EXPIRE_TIME,
+      }
+    );
 
     const cookieOptions = {
       httpOnly: true,
@@ -139,15 +143,15 @@ const login = async (req, res) => {
     res.cookie("token", token, cookieOptions);
 
     res.sendStatus(200).json({
-      success:true,
+      success: true,
       message: "Login successful",
       token,
       user: {
         id: user._id,
         name: user.name,
         role: user.role,
-      }
-    })
+      },
+    });
   } catch (error) {
     res.status(400).json({
       message: "Login failed",
@@ -156,4 +160,73 @@ const login = async (req, res) => {
   }
 };
 
-export { registerUser, verifyUser };
+const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password')
+    console.log(user);
+    if(!user) {
+      return res.status(400).json({
+        success: false,
+        message: "User not found"
+      })
+    }
+
+    res.status(200).json({
+      success: true,
+      user
+    })
+  } catch (error) {}
+};
+const logoutUser = async (req, res) => {
+  try {
+    res.cookie("token", "", {})
+    res.status(200).json({
+      success: true,
+      message: "Logout successful",
+    });
+  } catch (error) {}
+};
+const forgotPassword = async (req, res) => {
+  try {
+    // get email
+    // find user based on email
+    // reset token
+    // reset expiry => Date.now() + 10 * 60 *100
+    // user.save()
+    // send mail => design url
+  } catch (error) {}
+};
+const resetPassword = async (req, res) => {
+  try {
+    // collect token from params
+    // password from req.body
+    const {token} = req.params
+    const {password, confPassword} = req.body
+
+    if (password === confPassword){
+      
+    }
+
+    try {
+      const user = await User.findOne({
+        resetPasswordToken: token,
+        resetPasswordExpires: { $gt: Date.now() }
+      })
+    // set password in user
+    // resetToken, resetExpiry => reset
+    // save user
+    } catch (error) {
+      
+    }
+  } catch (error) {}
+};
+
+export {
+  registerUser,
+  verifyUser,
+  login,
+  getMe,
+  logoutUser,
+  forgotPassword,
+  resetPassword,
+};
